@@ -5,6 +5,7 @@ import org.lwjgl.Version;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.opengl.GL;
 
+import static org.lwjgl.glfw.Callbacks.glfwFreeCallbacks;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11C.*;
 import static org.lwjgl.system.MemoryUtil.NULL;
@@ -29,7 +30,6 @@ public class Window {
         if (Window.window == null) {
             Window.window = new Window();
         }
-        log.info("Window is running with settings: width %s, and height %s", window.height, window.width);
         return window;
     }
 
@@ -38,6 +38,14 @@ public class Window {
 
         init();
         loop();
+
+        //Free the memory when the loop exited
+        glfwFreeCallbacks(glfwWindow);
+        glfwDestroyWindow(glfwWindow);
+
+        //Terminate GLFW and the free the error callback
+        glfwTerminate();
+        glfwSetErrorCallback(null).free();
     }
 
     private void loop() {
@@ -46,7 +54,7 @@ public class Window {
             glfwPollEvents();
 
             // Set the clear color
-            glClearColor(1.0f, 0.0f, 0.0f, 0.0f);
+            glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT); //flush color to entire screen
 
             glfwSwapBuffers(glfwWindow);
@@ -57,7 +65,6 @@ public class Window {
     private void init() {
         // Setup an error callback
         GLFWErrorCallback.createPrint(System.err).set();
-        log.error("We have got an ERROR");
 
         // Initiallize GLFW
         if (!glfwInit()) {
@@ -72,10 +79,16 @@ public class Window {
 
         // Create Window
         glfwWindow = glfwCreateWindow(this.width, this.height, this.title, NULL, NULL); //memory address where the window is
+        log.info("Window is running with settings: width " + window.width + ", and height " + window.height);
         // in the memory space !!!
         if (glfwWindow == NULL) {
             throw new IllegalStateException("Failed to creat the GLFW window.");
         }
+
+        //ustawwienie pozycji myszki na po utworzeniu frame
+        glfwSetCursorPosCallback(glfwWindow, MouseListener :: mousePosCallback);
+        glfwSetMouseButtonCallback(glfwWindow, MouseListener::mouseButtonCallback);
+        glfwSetCursorPosCallback(glfwWindow, MouseListener::mouseScrollCallback);
 
         // Make the OpenGl context
         glfwMakeContextCurrent(glfwWindow);
