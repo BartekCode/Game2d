@@ -24,7 +24,7 @@ public class Window {
 
     private static Window window;
 
-    private static Scene currentScene = new LevelScene();//obecna scena
+    private static Scene currentScene;//obecna scena
 
     public Window() {
         this.width = 1920;
@@ -41,7 +41,7 @@ public class Window {
         switch (newScene) {
             case 0:
                 currentScene = new LevelEditorScene();
-                //currentSceme.init();
+                //currentScene.init();
                 break;
             case 1:
                 currentScene = new LevelScene();
@@ -60,10 +60,13 @@ public class Window {
     }
 
     public void run() {
+
         System.out.println("Hello LWJGL " + Version.getVersion());
+        Window.changeScene(0);
 
         init();
         loop();
+
 
         //Free the memory when the loop exited
         glfwFreeCallbacks(glfwWindow);
@@ -72,8 +75,6 @@ public class Window {
         //Terminate GLFW and the free the error callback
         glfwTerminate();
         glfwSetErrorCallback(null).free();
-
-        Window.changeScene(0);
     }
 
     private void loop() { //petla naszej gry !!!
