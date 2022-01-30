@@ -1,5 +1,6 @@
 package com.bartek.jade;
 
+import com.bartek.util.Time;
 import lombok.extern.slf4j.Slf4j;
 import org.lwjgl.Version;
 import org.lwjgl.glfw.GLFWErrorCallback;
@@ -19,9 +20,11 @@ public class Window {
     private long glfwWindow; //memory address where the window is
     private boolean fadeToBlack = false;
 
-    private float r, g, b, a;
+    public float r, g, b, a;
 
     private static Window window;
+
+    private static Scene currentScene = new LevelScene();//obecna scena
 
     public Window() {
         this.width = 1920;
@@ -31,6 +34,22 @@ public class Window {
         b = 1;
         g = 1;
         a = 1;
+    }
+
+    //do jakiej Scene chcemy zmienic uzywamy switcha
+    public static void changeScene(int newScene) {
+        switch (newScene) {
+            case 0:
+                currentScene = new LevelEditorScene();
+                //currentSceme.init();
+                break;
+            case 1:
+                currentScene = new LevelScene();
+                break;
+            default:
+                assert false : "Unknow scene '" + newScene + "'";
+        }
+
     }
 
     public static Window get() { //tworzone tylko raz podczas uruchamiania apki
@@ -53,9 +72,15 @@ public class Window {
         //Terminate GLFW and the free the error callback
         glfwTerminate();
         glfwSetErrorCallback(null).free();
+
+        Window.changeScene(0);
     }
 
-    private void loop() {
+    private void loop() { //petla naszej gry !!!
+        float beginTime = Time.getTime();
+        float endTime;
+        float dt = -1.0f;
+
         while (!glfwWindowShouldClose(glfwWindow)) {
             //Poll events
             glfwPollEvents();
@@ -65,18 +90,26 @@ public class Window {
             glClear(GL_COLOR_BUFFER_BIT); //flush color to entire screen
 
 
-            //we should fade to black when using space key
-            if (fadeToBlack){
-                r = Math.max(r - 0.01f, 0);
-                g = Math.max(g - 0.01f, 0);
-                b = Math.max(b - 0.01f, 0);
+            if (dt >= 0) {
+                currentScene.update(dt);
             }
-            if (KeyListener.isKeyPressed(GLFW_KEY_SPACE)){
-                fadeToBlack = true;
 
-            }
+
+//            //we should fade to black when using space key
+//            if (fadeToBlack) {
+//                r = Math.max(r - 0.01f, 0);
+//                g = Math.max(g - 0.01f, 0);
+//                b = Math.max(b - 0.01f, 0);
+//            }
+//            if (KeyListener.isKeyPressed(GLFW_KEY_SPACE)) {
+//                fadeToBlack = true;
+//            }
 
             glfwSwapBuffers(glfwWindow);
+
+            endTime = Time.getTime(); //koniec loopa jaki jest czas
+            dt = endTime - beginTime; //delta czyli roznica miedzy czasem koncowym a początkiem
+            beginTime = endTime; // i od nowa loop
         }
 
     }
@@ -105,7 +138,7 @@ public class Window {
         }
 
         //ustawwienie pozycji myszki, przcisków oraz listener na eventy
-        glfwSetCursorPosCallback(glfwWindow, MouseListener :: mousePosCallback);
+        glfwSetCursorPosCallback(glfwWindow, MouseListener::mousePosCallback);
         glfwSetMouseButtonCallback(glfwWindow, MouseListener::mouseButtonCallback);
         glfwSetCursorPosCallback(glfwWindow, MouseListener::mouseScrollCallback);
         glfwSetKeyCallback(glfwWindow, KeyListener::keyCallback);
